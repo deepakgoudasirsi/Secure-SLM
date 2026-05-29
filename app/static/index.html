@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Secure-SLM Dashboard</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-950 text-slate-100 min-h-screen">
+  <div class="max-w-5xl mx-auto p-6">
+    <header class="mb-8">
+      <h1 class="text-3xl font-bold text-emerald-400">Secure-SLM</h1>
+      <p class="text-slate-400 mt-1">Local SLM-powered security log analysis</p>
+    </header>
+
+    <section class="grid md:grid-cols-2 gap-4 mb-6">
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <label class="text-sm text-slate-400">Username</label>
+        <input id="username" class="w-full mt-1 bg-slate-800 rounded px-3 py-2" value="admin" />
+      </div>
+      <div class="bg-slate-900 border border-slate-800 rounded-xl p-4">
+        <label class="text-sm text-slate-400">Password</label>
+        <input id="password" type="password" class="w-full mt-1 bg-slate-800 rounded px-3 py-2" value="changeme" />
+      </div>
+    </section>
+
+    <button id="loginBtn" class="bg-emerald-600 hover:bg-emerald-500 px-4 py-2 rounded-lg mb-6">Login</button>
+    <span id="status" class="ml-3 text-sm text-slate-400"></span>
+
+    <section class="bg-slate-900 border border-slate-800 rounded-xl p-4 mb-6">
+      <h2 class="font-semibold mb-2">Analyze Log</h2>
+      <textarea id="logInput" rows="5" class="w-full bg-slate-800 rounded p-3 text-sm font-mono"
+        placeholder="Paste security log here...">Failed login attempt from IP 192.168.1.20 repeated 45 times in 2 minutes.
+User: admin</textarea>
+      <button id="analyzeBtn" class="mt-3 bg-sky-600 hover:bg-sky-500 px-4 py-2 rounded-lg">Analyze</button>
+    </section>
+
+    <section id="results" class="space-y-4 hidden">
+      <h2 class="font-semibold text-lg">Results</h2>
+      <div id="resultCards"></div>
+    </section>
+
+    <section class="mt-8">
+      <h2 class="font-semibold mb-2">Recent Alerts</h2>
+      <button id="refreshAlerts" class="text-sm text-emerald-400 mb-2">Refresh</button>
+      <div id="alertsList" class="space-y-2 text-sm"></div>
+    </section>
+  </div>
+
+  <script>
+    let token = null;
+    const api = (path) => `/api/v1${path}`;
+
+    async function login() {
+      const body = new URLSearchParams();
+      body.append('username', document.getElementById('username').value);
+      body.append('password', document.getElementById('password').value);
+      const res = await fetch(api('/auth/login'), { method: 'POST', body });
+      if (!res.ok) { document.getElementById('status').textContent = 'Login failed'; return; }
+      const data = await res.json();
+      token = data.access_token;
+      document.getElementById('status').textContent = 'Logged in';
+      loadAlerts();
+    }
+
+    async function analyze() {
+      if (!token) await login();
+      const res = await fetch(api('/analysis/analyze'), {
+        method: 'POST',
+        headers: { 'Authorization': `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ log_text: document.getElementById('logInput').value, use_slm: true })
+      });
+      const data = await res.json();
+      const container = document.getElementById('resultCards');
+      container.innerHTML = '';
+      document.getElementById('results').classList.remove('hidden');
+      (data.threats || []).forEach(t => {
+        const card = document.createElement('div');
+        card.className = 'bg-slate-900 border border-slate-700 rounded-xl p-4';
+        card.innerHTML = `
+          <div class="flex justify-between"><span class="font-semibold text-rose-400">${t.threat_type}</span>
+          <span class="text-xs uppercase px-2 py-1 rounded bg-slate-800">${t.severity}</span></div>
+          <p class="mt-2 text-slate-300 text-sm">${t.explanation}</p>
+          <ul class="mt-2 list-decimal list-inside text-sm text-slate-400">
+            ${(t.recommendations || []).map(r => `<li>${r}</li>`).join('')}
+          </ul>`;
+        container.appendChild(card);
+      });
+      loadAlerts();
+    }
+
+    async function loadAlerts() {
+      if (!token) return;
+      const res = await fetch(api('/alerts?limit=10'), {
+        headers: { 'Authorization': `Bearer ${token}` }
+      });
+      const alerts = await res.json();
+      const list = document.getElementById('alertsList');
+      list.innerHTML = alerts.map(a => `
+        <div class="bg-slate-900 border border-slate-800 rounded p-3">
+          <span class="text-rose-400">${a.threat_type}</span> · ${a.severity} · ${(a.confidence * 100).toFixed(0)}%
+        </div>`).join('') || '<p class="text-slate-500">No alerts yet.</p>';
+    }
+
+    document.getElementById('loginBtn').onclick = login;
+    document.getElementById('analyzeBtn').onclick = analyze;
+    document.getElementById('refreshAlerts').onclick = loadAlerts;
+  </script>
+</body>
+</html>

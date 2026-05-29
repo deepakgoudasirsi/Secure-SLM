@@ -1,0 +1,44 @@
+[
+  {
+    "technique_id": "T1110",
+    "name": "Brute Force",
+    "tactic": "Credential Access",
+    "description": "Adversaries may use brute force techniques to gain access to accounts when passwords are unknown or when password hashes are obtained.",
+    "keywords": ["brute force", "failed login", "password spray", "credential stuffing"]
+  },
+  {
+    "technique_id": "T1046",
+    "name": "Network Service Discovery",
+    "tactic": "Discovery",
+    "description": "Adversaries may attempt to get a listing of services running on remote hosts, including port scans.",
+    "keywords": ["port scan", "nmap", "masscan", "reconnaissance"]
+  },
+  {
+    "technique_id": "T1068",
+    "name": "Exploitation for Privilege Escalation",
+    "tactic": "Privilege Escalation",
+    "description": "Adversaries may exploit software vulnerabilities in an attempt to elevate privileges.",
+    "keywords": ["privilege escalation", "SeDebugPrivilege", "sudo", "elevation"]
+  },
+  {
+    "technique_id": "T1204",
+    "name": "User Execution",
+    "tactic": "Execution",
+    "description": "An adversary may rely upon specific actions by a user to execute malware.",
+    "keywords": ["malware", "trojan", "powershell -enc", "ransomware"]
+  },
+  {
+    "technique_id": "T1071",
+    "name": "Application Layer Protocol",
+    "tactic": "Command and Control",
+    "description": "Adversaries may communicate using application layer protocols to avoid detection.",
+    "keywords": ["C2", "beacon", "command and control", "backdoor"]
+  },
+  {
+    "technique_id": "T1498",
+    "name": "Network Denial of Service",
+    "tactic": "Impact",
+    "description": "Adversaries may perform DoS attacks to degrade availability of resources.",
+    "keywords": ["ddos", "syn flood", "denial of service"]
+  }
+]

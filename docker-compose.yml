@@ -1,0 +1,23 @@
+services:
+  api:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=sqlite:///./secure_slm.db
+      - SLM_MODE=template
+      - SECRET_KEY=change-in-production
+      - ADMIN_USERNAME=admin
+      - ADMIN_PASSWORD=changeme
+    volumes:
+      - ./data:/app/data
+
+  # Uncomment for PostgreSQL in production
+  # db:
+  #   image: postgres:16-alpine
+  #   environment:
+  #     POSTGRES_USER: secure_slm
+  #     POSTGRES_PASSWORD: secure_slm
+  #     POSTGRES_DB: secure_slm
+  #   ports:
+  #     - "5432:5432"
